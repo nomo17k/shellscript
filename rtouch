@@ -1,7 +1,10 @@
 #!/usr/bin/env python2.6
 """
-Update the access time of directory, files, and subdirectories using
-the Linux `touch` command.
+Update the access time of files.
+
+All files are searched for recursively and the Linux `touch` command
+is used to change their last access times.  If possible (if `touch -h`
+works), the timestamps for symbolic links are also updated.
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -11,12 +14,12 @@ from glob import glob
 from optparse import OptionParser
 import os
 from tempfile import TemporaryFile
-from subprocess import Popen
+from subprocess import Popen, call
 from sys import stdout, stderr
 from time import asctime, localtime
 
 
-__version__ = '20101203'
+__version__ = '20101222'
 __author__ = 'Taro Sato'
 __email__ = 'ubutsu@gmail.com'
 
@@ -49,13 +52,29 @@ def onerror(e):
     print(e, file=stderr)
 
 
+def sanitizepath(s):
+    for b, a in [(" ", "\ "),
+                 ("'", "\\'"),
+                 ('"', '\\"'),
+                 ('&', '\&'),
+                 ('?', '\?'),
+                 ('(', '\('),
+                 (')', '\)'),
+                 ('[', '\['),
+                 (']', '\]'),
+                 ('<', '\<'),
+                 ('>', '\>')]:
+        s = s.replace(b, a)
+    return s
+
+
 def docmd(cmd, path, fakerun=False):
     if len(glob(path)) == 0:
         return
-    cmdline = '%s %s' % (cmd, path)
+    cmdline = '%s %s' % (cmd, sanitizepath(path))
     print(cmdline)
-    if fakerun is not False:
-        Popen(cmdline, shell=True, stdout=stdout, stderr=stderr)
+    if fakerun is not True:
+        call(cmdline, shell=True, stdout=stdout, stderr=stderr)
 
 
 def rtouch(paths, fakerun=False):
@@ -75,7 +94,8 @@ def rtouch(paths, fakerun=False):
             onerror('skip %s: not a directory' % path)
             continue
         for parent, subs, fs in os.walk(path, topdown=False, onerror=onerror):
-            docmd(cmd, '%s/*' % parent, fakerun=fakerun)
+            docmd(cmd, '%s/*' % parent)
+
         # top-most directory has not been touched, so do it here:
         docmd(cmd, '%s' % path, fakerun=fakerun)
 
@@ -87,4 +107,6 @@ if __name__ == '__main__':
     p.add_option('--fakerun', action='store_true', default=False,
                  help="get the list of directories but don't actually execute touch")
     opts, args = p.parse_args()
-    rtouch(args, opts.fakerun)
+    if len(args) == 0:
+        p.error("need top level directory path(s)")
+    rtouch(args, fakerun=opts.fakerun)
