@@ -14,13 +14,15 @@ if [ ! -f /sys/devices/platform/smapi/ac_connected ]; then
     exit 0
 fi
 
+TAG=pmtp
 STATUS=`cat /sys/devices/platform/smapi/ac_connected`
 
 if [ "$STATUS" = "1" ]; then
-    logger -t powermanage_tp "on ac"
+    logger -t $TAG "on ac"
 
     #iwconfig wlan0 power off
 
+    logger -t $TAG "increasing swappiness"
     sysctl -w vm.swappiness=60
 
     #echo 5 > /sys/module/snd_hda_intel/parameters/power_save
@@ -38,14 +40,14 @@ if [ "$STATUS" = "1" ]; then
     #modprobe e1000e 2>&1 | logger
     
 else
-    logger -t powermanage_tp "on battery"
+    logger -t $TAG "on battery"
 
     # WiFi Card
     #iwconfig wlan0 power on
 
     #for i in /sys/bus/pci/devices/*/power_level ; do echo 5 > $i; done
 
-    logger -t powermanage_tp "reducing swappiness"
+    logger -t $TAG "reducing swappiness"
     sysctl -w vm.swappiness=10
 
     # Intel HD Audio
