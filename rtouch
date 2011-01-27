@@ -68,10 +68,14 @@ def sanitizepath(s):
     return s
 
 
-def docmd(cmd, path, fakerun=False):
-    if len(glob(path)) == 0:
+def docmd(cmd, paths, fakerun=False):
+    nfiles = 0
+    for path in paths:
+        nfiles = nfiles + len(glob(path))
+    if nfiles == 0:
         return
-    cmdline = '%s %s' % (cmd, sanitizepath(path))
+    path = ' '.join([sanitizepath(path) for path in paths])
+    cmdline = '%s %s' % (cmd, path)
     print(cmdline)
     if fakerun is not True:
         call(cmdline, shell=True, stdout=stdout, stderr=stderr)
@@ -94,10 +98,10 @@ def rtouch(paths, fakerun=False):
             onerror('skip %s: not a directory' % path)
             continue
         for parent, subs, fs in os.walk(path, topdown=False, onerror=onerror):
-            docmd(cmd, '%s/*' % parent)
+            docmd(cmd, ['%s/*' % parent, '%s/.*' % parent])
 
         # top-most directory has not been touched, so do it here:
-        docmd(cmd, '%s' % path, fakerun=fakerun)
+        docmd(cmd, ['%s' % path], fakerun=fakerun)
 
 
 if __name__ == '__main__':
