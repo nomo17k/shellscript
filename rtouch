@@ -19,7 +19,7 @@ from sys import stdout, stderr
 from time import asctime, localtime
 
 
-__version__ = '20101222'
+__version__ = '20110627'
 __author__ = 'Taro Sato'
 __email__ = 'ubutsu@gmail.com'
 
@@ -68,14 +68,13 @@ def sanitizepath(s):
     return s
 
 
-def docmd(cmd, paths, fakerun=False):
-    nfiles = 0
-    for path in paths:
-        nfiles = nfiles + len(glob(path))
+def docmd(cmd, path, fakerun=False):
+    nfiles = len(glob(path))
     if nfiles == 0:
         return
-    path = ' '.join([sanitizepath(path) for path in paths])
-    cmdline = '%s %s' % (cmd, path)
+    path = sanitizepath(path)
+    # need to use find in order to avoid "argument list too long" error
+    cmdline = "find %s -path '*' -maxdepth 1 -exec %s {} \;" % (path, cmd)
     print(cmdline)
     if fakerun is not True:
         call(cmdline, shell=True, stdout=stdout, stderr=stderr)
@@ -98,10 +97,10 @@ def rtouch(paths, fakerun=False):
             onerror('skip %s: not a directory' % path)
             continue
         for parent, subs, fs in os.walk(path, topdown=False, onerror=onerror):
-            docmd(cmd, ['%s/*' % parent, '%s/.*' % parent])
+            docmd(cmd, parent)
 
         # top-most directory has not been touched, so do it here:
-        docmd(cmd, ['%s' % path], fakerun=fakerun)
+        #docmd(cmd, ['%s' % path], fakerun=fakerun)
 
 
 if __name__ == '__main__':
