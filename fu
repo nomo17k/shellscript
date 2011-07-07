@@ -7,7 +7,7 @@
 # Credit: http://www.unix.com/302094930-post4.html
 ##############################################################################
 
-du -k --max-depth=1 | sort -nr | awk '
+du -k --max-depth=1 "$@" | sort -nr | awk '
      BEGIN {
         split("KB,MB,GB,TB", Units, ",");
      }
