@@ -5,8 +5,8 @@
 # tp_smapi to be loaded for the detection of AC/battery.
 
 USERNAME=taro
-LONGITUDE=37.78
-LATITUDE=-122.42
+LATITUDE=37.78
+LONGITUDE=-122.42
 
 
 ##############################################################################
