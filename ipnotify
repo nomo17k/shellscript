@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 """Notify IP address change via email.  Use cron to run this periodically."""
 from datetime import datetime
 from email.mime.text import MIMEText
